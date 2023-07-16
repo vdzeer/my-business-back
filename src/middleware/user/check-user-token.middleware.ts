@@ -15,9 +15,10 @@ export const checkAccessTokenMiddleware = async (
 
     token = token.split(' ')[1]
 
-    const decodedData = jwt.verify(token, config.JWT_SECRET)
+    const decodedData = jwt.verify(token, process.env.MONGODB_URL)
 
-    req.user = decodedData
+    req.userId = decodedData.id
+
     req.token = token
     next()
   } catch (e) {

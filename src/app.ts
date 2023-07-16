@@ -67,10 +67,10 @@ class App {
 
   private mountRoutes(): void {
     this.app.use('/', router)
-    // this.app.use(
-    //   '/images',
-    //   express.static(path.resolve((global as any).appRoot, 'public')),
-    // )
+    this.app.use(
+      '/images',
+      express.static(path.resolve((global as any).appRoot, 'public')),
+    )
   }
 }
 

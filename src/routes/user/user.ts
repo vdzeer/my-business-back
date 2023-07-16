@@ -1,11 +1,13 @@
 import { Router } from 'express'
 import { checkAccessTokenMiddleware } from '../../middleware'
 import { UserController } from '../../controllers'
+import { fileLoaderService } from '../../services'
 
 const router = Router()
 
-router.post(
+router.put(
   '/update',
+  fileLoaderService.file('image', /image\/(png|jpeg|giff)/, false),
   checkAccessTokenMiddleware,
   UserController.updateUserById,
 )
@@ -16,6 +18,8 @@ router.post(
   UserController.changePassword,
 )
 
-router.get('/:id', UserController.getUserById)
+router.get('/me', checkAccessTokenMiddleware, UserController.getMyUser)
+
+router.get('/:id', checkAccessTokenMiddleware, UserController.getUserById)
 
 export const userRouter = router

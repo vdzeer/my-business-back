@@ -20,6 +20,10 @@ export const errors = {
     message: 'PASSWORD_IS_NOT_EQUAL',
     code: 'PASSWORD_IS_NOT_EQUAL',
   },
+  WRONG_PASSWORD: {
+    message: 'WRONG_PASSWORD',
+    code: 'WRONG_PASSWORD',
+  },
 
   //401
   UNAUTHORIZED_BAD_TOKEN: {
