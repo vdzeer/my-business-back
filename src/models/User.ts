@@ -9,6 +9,8 @@ const userSchema = new Schema({
   password: { type: String },
   name: { type: String },
   image: { type: String },
+  resetToken: { type: String },
+  resetTokenExpires: { type: Date },
 })
 
 export const UserModel = model('User', userSchema)

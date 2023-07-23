@@ -2,9 +2,14 @@ import { StatusCodes } from 'http-status-codes'
 import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 import { nodemailerService, userService } from '../services'
-import { config } from '../config'
 
+const axios = require('axios')
+const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
+
+const generatePasswordToken = () => {
+  return crypto.randomBytes(20).toString('hex')
+}
 
 const generateAccessToken = id => {
   const payload = {
@@ -85,6 +90,139 @@ class authController {
         data: candidate,
         token,
       })
+    } catch (err) {
+      return next(new ErrorHandler(err?.status, err?.code, err?.message))
+    }
+  }
+
+  async google(req, res, next) {
+    try {
+      const { code } = req.body
+
+      const { data } = await axios.post('https://oauth2.googleapis.com/token', {
+        code: code,
+        client_id: process.env.GOOGLE_KEY,
+        client_secret: process.env.GOOGLE_SECRET,
+        grant_type: 'authorization_code',
+      })
+
+      const userInfo = await axios.get(
+        'https://www.googleapis.com/oauth2/v3/userinfo',
+        {
+          headers: {
+            Authorization: `Bearer ${data.access_token}`,
+          },
+        },
+      )
+
+      const candidate = await userService.findOneByParams({
+        email: userInfo.data.email,
+      })
+
+      if (!candidate) {
+        const user = await userService.createUser({
+          ...req.body,
+          provider: 'google',
+          name: userInfo.data.name,
+          image: '',
+          businesses: [],
+          subscription: null,
+          email: userInfo.data.email,
+        })
+
+        const newUser = await userService.findById(user._id)
+
+        const token = generateAccessToken(newUser._id)
+
+        res.json({
+          data: newUser,
+          token,
+        })
+      } else {
+        const token = generateAccessToken(candidate._id)
+
+        res.json({
+          data: candidate,
+          token,
+        })
+      }
+    } catch (err) {
+      return next(new ErrorHandler(err?.status, err?.code, err?.message))
+    }
+  }
+
+  async forgotPassword(req, res, next) {
+    try {
+      const { email } = req.body
+      const user = await userService.findOneByParams({ email })
+
+      if (!user) {
+        return next(
+          new ErrorHandler(
+            StatusCodes.NOT_FOUND,
+            errors.USER_NOT_FOUND.message,
+            errors.USER_NOT_FOUND.code,
+          ),
+        )
+      }
+
+      const token = generatePasswordToken()
+      const tokenExpires = Date.now() + 3600000
+
+      const mailOptions = {
+        from: 'myjob@gmail.com',
+        to: email,
+        subject: 'Password Recovery',
+        text: 'Here is your password recovery link: ' + token,
+      }
+
+      await userService.updateUserByParams(
+        { _id: user._id },
+        { resetToken: token, resetTokenExpires: tokenExpires },
+      )
+
+      await nodemailerService(mailOptions)
+
+      return res.json({ status: 'ok' })
+    } catch (err) {
+      return next(new ErrorHandler(err?.status, err?.code, err?.message))
+    }
+  }
+
+  async resetPassword(req, res, next) {
+    try {
+      const { email, token, newPassword } = req.body
+      const user = await userService.findOneByParams({ email })
+
+      if (!user) {
+        return next(
+          new ErrorHandler(
+            StatusCodes.NOT_FOUND,
+            errors.USER_NOT_FOUND.message,
+            errors.USER_NOT_FOUND.code,
+          ),
+        )
+      } else if (
+        user.resetToken !== token ||
+        user.resetTokenExpires < Date.now()
+      ) {
+        return next(
+          new ErrorHandler(
+            StatusCodes.NOT_FOUND,
+            errors.INJURED_TOKEN.message,
+            errors.INJURED_TOKEN.code,
+          ),
+        )
+      } else {
+        const hashPassword = await bcrypt.hash(newPassword, 12)
+
+        await userService.updateUserByParams(
+          { _id: user._id },
+          { resetToken: null, resetTokenExpires: null, password: hashPassword },
+        )
+      }
+
+      return res.json({ status: 'ok' })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
     }

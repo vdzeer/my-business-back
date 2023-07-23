@@ -21,4 +21,6 @@ router.post(
   UserController.login,
 )
 
+router.post('/google', UserController.google)
+
 export const authRouter = router

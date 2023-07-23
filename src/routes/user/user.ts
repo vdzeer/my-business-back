@@ -18,6 +18,10 @@ router.post(
   UserController.changePassword,
 )
 
+router.post('/reset-password', UserController.resetPassword)
+
+router.post('/forget-password', UserController.forgotPassword)
+
 router.get('/me', checkAccessTokenMiddleware, UserController.getMyUser)
 
 router.get('/:id', checkAccessTokenMiddleware, UserController.getUserById)
