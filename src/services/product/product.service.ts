@@ -26,6 +26,17 @@ class ProductService {
     return ProductModel.findById(id).populate('inventories').lean().exec()
   }
 
+  findMore(ids: Array<string>) {
+    return ProductModel.find({
+      _id: {
+        $in: ids,
+      },
+    })
+      .populate('inventories')
+      .lean()
+      .exec()
+  }
+
   deleteById(id: string) {
     return ProductModel.remove({ _id: id })
   }
