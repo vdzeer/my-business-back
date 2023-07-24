@@ -34,9 +34,6 @@ jobs:
 
     - name: Build the application
       run: npm run build
-      
-    - name: Copy .env file to the server
-      run: sshpass -p ${{ secrets.SERVER_PASSWORD }} scp .env ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/server/my-business-back/
 
     - name: Copy application files to server
       run: rsync -avz -e "sshpass -p '${{ secrets.SERVER_PASSWORD }}' ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/server/my-business-back/
