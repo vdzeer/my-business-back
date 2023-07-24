@@ -12,17 +12,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-      
-    - name: Install NVM
-      run: |
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-        export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-        nvm install 14.17.5 # Install Node.js version 14.17.5 (or any other compatible version)
-        nvm use 14.17.5
-        node --version
-        npm --version
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
