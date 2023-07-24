@@ -35,8 +35,6 @@ class productController {
       let businessId = req.query.businessId
       let categoryId = req.query.categoryId
 
-      console.log(businessId, categoryId)
-
       const products = await productService.findAllByParams({
         businessId,
         ...(categoryId ? { categoryId } : {}),
