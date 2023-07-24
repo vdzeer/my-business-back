@@ -18,8 +18,8 @@ jobs:
       with:
         node-version: '14.x' # Change to your required Node.js version
 
-    - name: Install sshpass
-      run: sudo apt-get update && sudo apt-get install -y sshpass
+    - name: Install rsync
+      run: sudo apt-get update && sudo apt-get install -y rsync
 
     - name: Install dependencies
       run: npm install --legacy-peer-deps
@@ -28,7 +28,7 @@ jobs:
       run: npm run build
 
     - name: Copy application files to server
-      run: sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -r . ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:/server/my-business-back
+      run: rsync -avz -e "sshpass -p '${{ secrets.SERVER_PASSWORD }}' ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:/server/my-business-back
 
     - name: SSH into the server and start the app
-      run: sshpass -p ${{ secrets.SERVER_PASSWORD }} ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd /server/my-business-back && pm2 restart index" # Use the appropriate command to start your Express.js app
+      run: rsync -avz -e "sshpass -p '${{ secrets.SERVER_PASSWORD }}' ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd /server/my-business-back && pm2 restart index" # Use the appropriate command to start your Express.js app
