@@ -1,0 +1,34 @@
+name: Node.js App Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14.x' # Change to your required Node.js version
+
+    - name: Install sshpass
+      run: sudo apt-get update && sudo apt-get install -y sshpass
+
+    - name: Install dependencies
+      run: npm install --legacy-peer-deps
+
+    - name: Build the application
+      run: npm run build
+
+    - name: Copy application files to server
+      run: sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -r . ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:/server/my-business-back
+
+    - name: SSH into the server and start the app
+      run: sshpass -p ${{ secrets.SERVER_PASSWORD }} ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd /server/my-business-back && pm2 restart index" # Use the appropriate command to start your Express.js app
