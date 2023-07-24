@@ -20,15 +20,15 @@ jobs:
 
     - name: Install rsync
       run: sudo apt-get update && sudo apt-get install -y rsync
-      
-    - name: Install pm2
-      run: npm install pm2 -g
 
     - name: Install dependencies
       run: npm install --legacy-peer-deps
 
     - name: Build the application
       run: npm run build
+      
+    - name: Install pm2
+      run: npm install pm2 -g
 
     - name: Copy application files to server
       run: rsync -avz -e "sshpass -p '${{ secrets.SERVER_PASSWORD }}' ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/server/my-business-back/
