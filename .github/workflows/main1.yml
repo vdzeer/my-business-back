@@ -31,4 +31,4 @@ jobs:
       run: rsync -avz -e "sshpass -p '${{ secrets.SERVER_PASSWORD }}' ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/server/my-business-back/
 
     - name: SSH into the server and start the app
-      run: sshpass -p ${{ secrets.SERVER_PASSWORD }} ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd ~/server/my-business-back/ && nvm install 16 && nvm use 16 && npm install pm2 -g && pm2 start dist/index.js"
+      run: sshpass -p ${{ secrets.SERVER_PASSWORD }} ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd ~/server/my-business-back/ && brew install nvm && nvm install 16 && nvm use 16 && npm install pm2 -g && pm2 start dist/index.js"
