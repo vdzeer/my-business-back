@@ -12,6 +12,17 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+      
+    - name: Install NVM
+      run: |
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+        nvm install 14.17.5 # Install Node.js version 14.17.5 (or any other compatible version)
+        nvm use 14.17.5
+        node --version
+        npm --version
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
@@ -31,4 +42,4 @@ jobs:
       run: rsync -avz -e "sshpass -p '${{ secrets.SERVER_PASSWORD }}' ssh -o StrictHostKeyChecking=no" ./ ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/server/my-business-back/
 
     - name: SSH into the server and start the app
-      run: sshpass -p ${{ secrets.SERVER_PASSWORD }} ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd ~/server/my-business-back/ && brew install nvm && nvm install 16 && nvm use 16 && npm install pm2 -g && pm2 start dist/index.js"
+      run: sshpass -p ${{ secrets.SERVER_PASSWORD }} ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd ~/server/my-business-back/ && npm install pm2 -g && pm2 start dist/index.js"
