@@ -26,4 +26,6 @@ router.get('/me', checkAccessTokenMiddleware, UserController.getMyUser)
 
 router.get('/:id', checkAccessTokenMiddleware, UserController.getUserById)
 
+router.post('/logout', UserController.logout)
+
 export const userRouter = router

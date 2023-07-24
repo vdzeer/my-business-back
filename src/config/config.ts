@@ -7,8 +7,6 @@ export const config = {
 
   CRON_JOB_PERIOD: process.env.CRON_JOB_PERIOD || '',
 
-  JWT_SECRET: process.env.JWT_SECRET || '',
-
   serverRateLimits: {
     period: 15 * 60 * 1000,
     maxRequests: 1000,

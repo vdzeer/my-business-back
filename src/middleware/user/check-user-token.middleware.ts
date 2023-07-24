@@ -1,8 +1,9 @@
 import { NextFunction, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { config } from '../../config'
 
 import { ErrorHandler, errors } from '../../errors'
+import { UserTokenModel } from '../../models'
+
 const jwt = require('jsonwebtoken')
 
 export const checkAccessTokenMiddleware = async (
@@ -15,14 +16,28 @@ export const checkAccessTokenMiddleware = async (
 
     token = token.split(' ')[1]
 
-    const decodedData = jwt.verify(token, process.env.MONGODB_URL)
+    const decodedData = jwt.verify(token, process.env.ACCESS_TOKEN_PRIVATE_KEY)
 
-    req.userId = decodedData.id
-
-    req.token = token
-    next()
+    if (decodedData) {
+      req.userId = decodedData.id
+      req.token = token
+      return next()
+    } else {
+      return next(
+        new ErrorHandler(
+          StatusCodes.BAD_REQUEST,
+          errors.INJURED_TOKEN.message,
+          errors.INJURED_TOKEN.code,
+        ),
+      )
+    }
   } catch (e) {
-    console.log('e', e)
-    next(e)
+    return next(
+      new ErrorHandler(
+        StatusCodes.BAD_REQUEST,
+        errors.INVALID_TOKEN.message,
+        errors.INVALID_TOKEN.code,
+      ),
+    )
   }
 }

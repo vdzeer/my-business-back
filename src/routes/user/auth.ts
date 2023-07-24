@@ -21,6 +21,10 @@ router.post(
   UserController.login,
 )
 
+router.post('/refresh', UserController.refreshToken)
+
 router.post('/google', UserController.google)
+
+router.post('/apple', UserController.apple)
 
 export const authRouter = router

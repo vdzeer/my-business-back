@@ -2,6 +2,7 @@ import { StatusCodes } from 'http-status-codes'
 import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 import { nodemailerService, userService } from '../services'
+import { UserTokenModel } from '../models'
 
 const axios = require('axios')
 const crypto = require('crypto')
@@ -11,11 +12,31 @@ const generatePasswordToken = () => {
   return crypto.randomBytes(20).toString('hex')
 }
 
-const generateAccessToken = id => {
-  const payload = {
-    id,
+const generateTokens = async id => {
+  try {
+    const payload = {
+      id,
+    }
+
+    const accessToken = jwt.sign(
+      payload,
+      process.env.ACCESS_TOKEN_PRIVATE_KEY,
+      { expiresIn: '1d' },
+    )
+    const refreshToken = jwt.sign(
+      payload,
+      process.env.REFRESH_TOKEN_PRIVATE_KEY,
+      { expiresIn: '30d' },
+    )
+
+    const userToken = await UserTokenModel.findOne({ userId: id })
+    if (userToken) await userToken.remove()
+
+    await new UserTokenModel({ userId: id, token: refreshToken }).save()
+    return Promise.resolve({ accessToken, refreshToken })
+  } catch (err) {
+    return Promise.reject(err)
   }
-  return jwt.sign(payload, process.env.MONGODB_URL, { expiresIn: '100h' })
 }
 
 class authController {
@@ -48,11 +69,12 @@ class authController {
 
       const newUser = await userService.findById(user._id)
 
-      const token = generateAccessToken(newUser._id)
+      const { accessToken, refreshToken } = await generateTokens(newUser._id)
 
       res.json({
         data: newUser,
-        token,
+        accessToken,
+        refreshToken,
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -84,11 +106,13 @@ class authController {
           ),
         )
       }
-      const token = generateAccessToken(candidate._id)
+
+      const { accessToken, refreshToken } = await generateTokens(candidate._id)
 
       res.json({
         data: candidate,
-        token,
+        accessToken,
+        refreshToken,
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -132,19 +156,101 @@ class authController {
 
         const newUser = await userService.findById(user._id)
 
-        const token = generateAccessToken(newUser._id)
+        const { accessToken, refreshToken } = await generateTokens(newUser._id)
 
         res.json({
           data: newUser,
-          token,
+          accessToken,
+          refreshToken,
         })
       } else {
-        const token = generateAccessToken(candidate._id)
+        const { accessToken, refreshToken } = await generateTokens(
+          candidate._id,
+        )
 
         res.json({
           data: candidate,
-          token,
+          accessToken,
+          refreshToken,
         })
+      }
+    } catch (err) {
+      return next(new ErrorHandler(err?.status, err?.code, err?.message))
+    }
+  }
+
+  async apple(req, res, next) {
+    try {
+      const { code } = req.body
+
+      const tokenResponse = await axios.post(
+        'https://appleid.apple.com/auth/token',
+        {
+          grant_type: 'authorization_code',
+          code,
+          client_id: process.env.CLIENT_ID,
+          client_secret: process.env.APPLE_PRIVATE_KEY,
+        },
+      )
+
+      const { id_token, user } = tokenResponse.data
+
+      const verifiedToken = jwt.verify(
+        id_token,
+        process.env.APPLE_PRIVATE_KEY,
+        {
+          algorithms: ['ES256'],
+          audience: process.env.CLIENT_ID,
+          issuer: 'https://appleid.apple.com',
+        },
+      )
+
+      if (verifiedToken) {
+        const candidate = await userService.findOneByParams({
+          email: user.email,
+        })
+
+        if (!candidate) {
+          const _newUser = await userService.createUser({
+            ...req.body,
+            provider: 'google',
+            name: user.name,
+            image: '',
+            businesses: [],
+            subscription: null,
+            email: user.email,
+          })
+
+          const newUser = await userService.findById(_newUser._id)
+
+          const { accessToken, refreshToken } = await generateTokens(
+            newUser._id,
+          )
+
+          res.json({
+            data: newUser,
+            accessToken,
+            refreshToken,
+          })
+        } else {
+          const { accessToken, refreshToken } = await generateTokens(
+            candidate._id,
+          )
+
+          res.json({
+            data: candidate,
+            accessToken,
+            refreshToken,
+          })
+        }
+      } else {
+        return next(
+          new ErrorHandler(
+            StatusCodes.BAD_REQUEST,
+            errors.INJURED_TOKEN.message,
+            errors.INJURED_TOKEN.code,
+          ),
+        )
       }
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -308,6 +414,56 @@ class authController {
       res.send({
         status: 'ok',
       })
+    } catch (err) {
+      return next(new ErrorHandler(err.status, err?.code, err?.message))
+    }
+  }
+
+  async refreshToken(req, res, next) {
+    try {
+      const { token } = req.body
+
+      const user = await UserTokenModel.findOne({ token })
+
+      if (user) {
+        const payload = { id: user.userId }
+
+        const accessToken = jwt.sign(
+          payload,
+          process.env.ACCESS_TOKEN_PRIVATE_KEY,
+          {
+            expiresIn: '24h',
+          },
+        )
+
+        res.send({
+          accessToken,
+        })
+      } else {
+        return next(
+          new ErrorHandler(
+            StatusCodes.BAD_REQUEST,
+            errors.INVALID_TOKEN.message,
+            errors.INVALID_TOKEN.code,
+          ),
+        )
+      }
+    } catch (err) {
+      return next(new ErrorHandler(err.status, err?.code, err?.message))
+    }
+  }
+
+  async logout(req, res, next) {
+    try {
+      const { token } = req.body
+
+      const user = await UserTokenModel.findOne({ token })
+
+      if (!user) return res.send({ status: 'ok' })
+
+      await user.remove()
+
+      res.send({ status: 'ok' })
     } catch (err) {
       return next(new ErrorHandler(err.status, err?.code, err?.message))
     }
