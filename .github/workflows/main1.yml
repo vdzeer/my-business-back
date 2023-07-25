@@ -20,6 +20,10 @@ jobs:
            echo "ACCESS_TOKEN_PRIVATE_KEY=${{ secrets.ACCESS_TOKEN_PRIVATE_KEY }}" >> .env
            echo "REFRESH_TOKEN_PRIVATE_KEY=${{ secrets.REFRESH_TOKEN_PRIVATE_KEY }}" >> .env
            echo "MONGODB_URL=${{ secrets.MONGODB_URL }}" >> .env
+           echo "GOOGLE_KEY=${{ secrets.GOOGLE_KEY }}" >> .env
+           echo "GOOGLE_SECRET=${{ secrets.GOOGLE_SECRET }}" >> .env
+           echo "APPLE_PRIVATE_KEY=${{ secrets.APPLE_PRIVATE_KEY }}" >> .env
+           echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
