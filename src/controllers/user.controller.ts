@@ -7,6 +7,9 @@ import { UserTokenModel } from '../models'
 const axios = require('axios')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
+const { OAuth2Client } = require('google-auth-library')
+
+const client = new OAuth2Client(process.env.GOOGLE_KEY)
 
 const generatePasswordToken = () => {
   return crypto.randomBytes(20).toString('hex')
@@ -123,35 +126,28 @@ class authController {
     try {
       const { code } = req.body
 
-      const { data } = await axios.post('https://oauth2.googleapis.com/token', {
-        code: code,
-        client_id: process.env.GOOGLE_KEY,
-        client_secret: process.env.GOOGLE_SECRET,
-        grant_type: 'authorization_code',
+      const ticket = await client.verifyIdToken({
+        idToken: code,
       })
 
-      const userInfo = await axios.get(
-        'https://www.googleapis.com/oauth2/v3/userinfo',
-        {
-          headers: {
-            Authorization: `Bearer ${data.access_token}`,
-          },
-        },
-      )
+      const payload = ticket.getPayload()
+
+      const { email, name } = payload
 
       const candidate = await userService.findOneByParams({
-        email: userInfo.data.email,
+        email,
       })
 
       if (!candidate) {
         const user = await userService.createUser({
           ...req.body,
           provider: 'google',
-          name: userInfo.data.name,
+          name,
           image: '',
           businesses: [],
           subscription: null,
-          email: userInfo.data.email,
+          email,
+          role: 'creator',
         })
 
         const newUser = await userService.findById(user._id)
@@ -279,7 +275,33 @@ class authController {
         from: 'myjob@gmail.com',
         to: email,
         subject: 'Password Recovery',
-        text: 'Here is your password recovery link: ' + token,
+        html: `<html>
+    <head>
+      <title>Password Recovery</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f2f2f2;">
+        <tr>
+          <td align="center">
+            <table cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <tr>
+                <td align="center" bgcolor="#ffffff" style="padding: 40px;">
+                  <h1 style="margin: 0;">Password Recovery</h1>
+                  <table cellpadding="0" cellspacing="0" style="margin-top: 30px;">
+                    <tr>
+                      <td align="center" bgcolor="#ffffff" style="padding: 10px;">
+                        <a href="http://redirect-my-business-plus.s3-website.eu-central-1.amazonaws.com/?token=${token}&email=${email}" style="background-color: #3498db; color: #ffffff; display: inline-block; font-size: 16px; padding: 10px 20px; text-decoration: none;">Reset Password</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>`,
       }
 
       await userService.updateUserByParams(

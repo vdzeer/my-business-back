@@ -26,6 +26,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-rate-limit": "^5.3.0",
+    "google-auth-library": "^9.0.0",
     "http-status-codes": "^2.1.4",
     "joi": "^17.4.1",
     "jsonwebtoken": "^8.5.1",

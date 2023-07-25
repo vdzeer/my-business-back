@@ -63,9 +63,7 @@ class productController {
         },
       )
 
-      const updatedProduct = await productService.findOneByParams({
-        _id: productId,
-      })
+      const updatedProduct = await productService.findById(productId)
 
       res.send({
         status: 'ok',

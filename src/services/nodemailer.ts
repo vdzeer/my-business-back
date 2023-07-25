@@ -4,10 +4,10 @@ const transporter = nodemailer.createTransport(
   {
     host: 'smtp.gmail.com',
     post: '587',
-    secure: false,
+    secure: true,
     auth: {
-      user: 'ternake58@gmail.com',
-      pass: 'baegpmjdzvxmfgsd',
+      user: 'mybusinessplusbot@gmail.com',
+      pass: 'oexafumriuumsjtc',
     },
   },
   {
