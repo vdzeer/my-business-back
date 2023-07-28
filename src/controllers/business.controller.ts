@@ -10,7 +10,7 @@ class businessController {
   async create(req, res, next) {
     try {
       const { userId } = req
-      const { name, password } = req.body
+      const { name, password, currency } = req.body
 
       const hashPassword = await bcrypt.hash(password, 12)
 
@@ -19,6 +19,7 @@ class businessController {
         name,
         password: hashPassword,
         workers: [],
+        currency,
         ...(req?.file ? { image: req.file.filename } : {}),
       })
 
@@ -332,12 +333,13 @@ class businessController {
 
   async updateBusinessById(req, res, next) {
     try {
-      const { businessId, name } = req.body
+      const { businessId, name, currency } = req.body
 
       await businessService.updateByParams(
         { _id: businessId },
         {
           name,
+          currency,
           ...(req?.file ? { image: req.file.filename } : {}),
         },
       )

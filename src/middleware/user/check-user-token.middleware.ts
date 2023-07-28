@@ -25,7 +25,7 @@ export const checkAccessTokenMiddleware = async (
     } else {
       return next(
         new ErrorHandler(
-          StatusCodes.BAD_REQUEST,
+          StatusCodes.UNAUTHORIZED,
           errors.INJURED_TOKEN.message,
           errors.INJURED_TOKEN.code,
         ),
@@ -34,7 +34,7 @@ export const checkAccessTokenMiddleware = async (
   } catch (e) {
     return next(
       new ErrorHandler(
-        StatusCodes.BAD_REQUEST,
+        StatusCodes.UNAUTHORIZED,
         errors.INVALID_TOKEN.message,
         errors.INVALID_TOKEN.code,
       ),

@@ -6,6 +6,7 @@ const businessSchema = new Schema({
   name: { type: String, required: true },
   password: { type: String, required: true },
   image: { type: String },
+  currency: { type: String },
 })
 
 export const BusinessModel = model('Business', businessSchema)
