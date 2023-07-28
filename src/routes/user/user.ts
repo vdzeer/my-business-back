@@ -12,6 +12,18 @@ router.put(
   UserController.updateUserById,
 )
 
+router.put(
+  '/update-subscription',
+  checkAccessTokenMiddleware,
+  UserController.updateUserSubscription,
+)
+
+router.put(
+  '/update-language',
+  checkAccessTokenMiddleware,
+  UserController.updateUserLanguage,
+)
+
 router.post(
   '/update-password',
   checkAccessTokenMiddleware,

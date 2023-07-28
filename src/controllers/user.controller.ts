@@ -408,6 +408,54 @@ class authController {
     }
   }
 
+  async updateUserSubscription(req, res, next) {
+    try {
+      const { subscriptionId } = req.body
+
+      await userService.updateUserByParams(
+        { _id: req.userId },
+        {
+          subscription: subscriptionId,
+        },
+      )
+
+      const updatedUser = await userService.findOneByParams({
+        _id: req.userId,
+      })
+
+      res.send({
+        status: 'ok',
+        data: updatedUser,
+      })
+    } catch (err) {
+      return next(new ErrorHandler(err?.status, err?.code, err?.message))
+    }
+  }
+
+  async updateUserLanguage(req, res, next) {
+    try {
+      const { language } = req.body
+
+      await userService.updateUserByParams(
+        { _id: req.userId },
+        {
+          language,
+        },
+      )
+
+      const updatedUser = await userService.findOneByParams({
+        _id: req.userId,
+      })
+
+      res.send({
+        status: 'ok',
+        data: updatedUser,
+      })
+    } catch (err) {
+      return next(new ErrorHandler(err?.status, err?.code, err?.message))
+    }
+  }
+
   async changePassword(req, res, next) {
     try {
       const { oldPassword, password } = req.body
