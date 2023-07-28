@@ -78,9 +78,17 @@ class orderController {
   async getAll(req, res, next) {
     try {
       const { businessId } = req.params
+      let date = req.query.date
+
+      const startDate = new Date(date)
+      const endDate = new Date(new Date().setDate(startDate.getDate() + 1))
 
       const orders = await orderService.findAllByParams({
         businessId,
+        date: {
+          $gte: startDate.toISOString(),
+          $lt: endDate.toISOString(),
+        },
       })
 
       res.json({

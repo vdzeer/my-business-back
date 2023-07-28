@@ -38,6 +38,22 @@ class promocodeController {
     }
   }
 
+  async checkPromocodeById(req, res, next) {
+    try {
+      const { businessId, promocodeId } = req.body
+      const promocode = await promocodeService.findOneByParams({
+        businessId,
+        _id: promocodeId,
+      })
+
+      res.json({
+        data: promocode,
+      })
+    } catch (err) {
+      return next(new ErrorHandler(err?.status, err?.code, err?.message))
+    }
+  }
+
   async updatePromocodeById(req, res, next) {
     try {
       const { promocodeId, promocode, useAmount, salePercent } = req.body

@@ -50,7 +50,8 @@ class productController {
 
   async updateProductById(req, res, next) {
     try {
-      const { productId, name, price, selfPrice, inventories } = req.body
+      const { productId, name, price, selfPrice, inventories, categoryId } =
+        req.body
 
       await productService.updateByParams(
         { _id: productId },
@@ -58,6 +59,7 @@ class productController {
           name,
           price,
           selfPrice,
+          categoryId,
           inventories: inventories?.length ? inventories : [],
           ...(req?.file ? { image: req.file.filename } : {}),
         },
