@@ -86,7 +86,7 @@ class authController {
         name: '',
         image: '',
         businesses: [],
-        subscription: null,
+        subscription: '64c38bc1939ea5354c0d8fde',
       })
 
       const newUser = await userService.findById(user._id)
@@ -164,7 +164,7 @@ class authController {
           name,
           image: '',
           businesses: [],
-          subscription: null,
+          subscription: '64c38bc1939ea5354c0d8fde',
           email,
           role: 'creator',
         })
@@ -231,7 +231,7 @@ class authController {
             name: '',
             image: '',
             businesses: [],
-            subscription: null,
+            subscription: '64c38bc1939ea5354c0d8fde',
             email,
             role: 'creator',
           })

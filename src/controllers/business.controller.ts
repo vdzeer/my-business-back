@@ -110,7 +110,7 @@ class businessController {
         email,
         image: '',
         businesses: [businessId],
-        subscription: null,
+        subscription: '64c38bc1939ea5354c0d8fde',
       })
 
       const newUser = await userService.findById(user._id)
