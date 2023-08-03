@@ -9,6 +9,8 @@ import {
   inventoryService,
 } from '../services'
 
+const { ObjectId } = require('mongodb')
+
 class orderController {
   async create(req, res, next) {
     try {
@@ -18,10 +20,15 @@ class orderController {
 
       const parsedProducts = await productService.findMore(products)
 
-      let totalPrice = parsedProducts.reduce(
-        (total, item) => total + item.price,
-        0,
-      )
+      const _products = products
+        .map(el =>
+          parsedProducts.find(parsed =>
+            ObjectId(parsed._id).equals(ObjectId(el)),
+          ),
+        )
+        .filter(el => !!el)
+
+      let totalPrice = _products.reduce((total, item) => total + item.price, 0)
 
       if (promocodeId) {
         const promocode = await promocodeService.findById(promocodeId)
@@ -39,8 +46,8 @@ class orderController {
         }
       }
 
-      for (let index = 0; index < parsedProducts.length; index++) {
-        const product = parsedProducts[index]
+      for (let index = 0; index < _products.length; index++) {
+        const product = _products[index]
 
         if (product.inventories?.length) {
           for (let y = 0; y < product.inventories?.length; y++) {
@@ -59,7 +66,7 @@ class orderController {
         businessId,
         payType,
         user: userId,
-        products,
+        products: _products.map(el => el._id),
         date: new Date(),
         totalPrice,
         promocodeId,

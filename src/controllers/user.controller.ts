@@ -4,15 +4,34 @@ import { ErrorHandler, errors } from '../errors'
 import { nodemailerService, userService } from '../services'
 import { UserTokenModel } from '../models'
 
-const axios = require('axios')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
+const jwksClient = require('jwks-rsa')
 const { OAuth2Client } = require('google-auth-library')
 
 const client = new OAuth2Client(process.env.GOOGLE_KEY)
 
 const generatePasswordToken = () => {
   return crypto.randomBytes(20).toString('hex')
+}
+
+const appleClient = jwksClient({
+  jwksUri: 'https://appleid.apple.com/auth/keys',
+})
+
+const fetchApplePublicKeys = async kid => {
+  try {
+    return new Promise(resolve => {
+      appleClient.getSigningKey(kid, (err, key) => {
+        const signingKey = key.getPublicKey()
+
+        resolve(signingKey)
+      })
+    })
+  } catch (error) {
+    console.error('Error fetching Apple public keys:', error)
+    throw error
+  }
 }
 
 const generateTokens = async id => {
@@ -179,42 +198,41 @@ class authController {
     try {
       const { code } = req.body
 
-      const tokenResponse = await axios.post(
-        'https://appleid.apple.com/auth/token',
-        {
-          grant_type: 'authorization_code',
-          code,
-          client_id: process.env.CLIENT_ID,
-          client_secret: process.env.APPLE_PRIVATE_KEY,
-        },
-      )
+      const decodedToken = jwt.decode(code, { complete: true })
 
-      const { id_token, user } = tokenResponse.data
+      if (!decodedToken) {
+        throw new Error('Invalid token')
+      }
 
-      const verifiedToken = jwt.verify(
-        id_token,
-        process.env.APPLE_PRIVATE_KEY,
-        {
-          algorithms: ['ES256'],
-          audience: process.env.CLIENT_ID,
-          issuer: 'https://appleid.apple.com',
-        },
-      )
+      const { kid } = decodedToken.header
 
-      if (verifiedToken) {
+      const appleKey = await fetchApplePublicKeys(kid)
+
+      if (!appleKey) {
+        throw new Error('Apple key not found')
+      }
+
+      const options = {
+        algorithms: ['RS256'],
+      }
+
+      const payload = jwt.verify(code, appleKey, options)
+
+      if (payload.sub === decodedToken.payload.sub) {
+        const email = payload.email
+
         const candidate = await userService.findOneByParams({
-          email: user.email,
+          email,
         })
 
         if (!candidate) {
           const _newUser = await userService.createUser({
-            ...req.body,
-            provider: 'google',
-            name: user.name,
+            provider: 'apple',
+            name: '',
             image: '',
             businesses: [],
             subscription: null,
-            email: user.email,
+            email,
           })
 
           const newUser = await userService.findById(_newUser._id)
