@@ -233,6 +233,7 @@ class authController {
             businesses: [],
             subscription: null,
             email,
+            role: 'creator',
           })
 
           const newUser = await userService.findById(_newUser._id)
