@@ -12,11 +12,19 @@ class UserService {
   }
 
   findOneByParams(findObject) {
-    return UserModel.findOne(findObject).populate('businesses').lean().exec()
+    return UserModel.findOne(findObject)
+      .populate('businesses')
+      .populate('subscription')
+      .lean()
+      .exec()
   }
 
   findById(id: string) {
-    return UserModel.findById(id).populate('businesses').lean().exec()
+    return UserModel.findById(id)
+      .populate('businesses')
+      .populate('subscription')
+      .lean()
+      .exec()
   }
 
   deleteById(id: string) {
