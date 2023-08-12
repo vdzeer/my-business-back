@@ -40,10 +40,10 @@ class promocodeController {
 
   async checkPromocodeById(req, res, next) {
     try {
-      const { businessId, promocodeId } = req.body
+      const { businessId, promocodeName } = req.body
       const promocode = await promocodeService.findOneByParams({
         businessId,
-        _id: promocodeId,
+        promocode: promocodeName,
       })
 
       res.json({

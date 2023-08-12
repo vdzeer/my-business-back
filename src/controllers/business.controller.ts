@@ -167,7 +167,7 @@ class businessController {
       await nodemailerService(mailOptions)
 
       res.send({
-        status: 'ok',
+        data: newUser,
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -264,7 +264,7 @@ class businessController {
       await nodemailerService(mailOptions)
 
       res.send({
-        status: 'ok',
+        data: candidate,
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
