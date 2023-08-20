@@ -20,7 +20,7 @@ class BusinessService {
   }
 
   deleteById(id: string) {
-    return BusinessModel.remove({ _id: id })
+    return BusinessModel.findOneAndDelete({ _id: id })
   }
 }
 

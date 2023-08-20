@@ -39,7 +39,7 @@ class OrderService {
   }
 
   deleteById(id: string) {
-    return OrderModel.remove({ _id: id })
+    return OrderModel.findOneAndDelete({ _id: id })
   }
 }
 

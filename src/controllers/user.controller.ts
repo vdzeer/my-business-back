@@ -4,6 +4,8 @@ import { ErrorHandler, errors } from '../errors'
 import { nodemailerService, userService } from '../services'
 import { UserTokenModel } from '../models'
 
+const { ObjectId } = require('mongodb')
+
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 const jwksClient = require('jwks-rsa')
@@ -52,7 +54,7 @@ const generateTokens = async id => {
     )
 
     const userToken = await UserTokenModel.findOne({ userId: id })
-    if (userToken) await userToken.remove()
+    if (userToken) await userToken.deleteOne()
 
     await new UserTokenModel({ userId: id, token: refreshToken }).save()
     return Promise.resolve({ accessToken, refreshToken })
@@ -89,7 +91,7 @@ class authController {
         subscription: '64c38bc1939ea5354c0d8fde',
       })
 
-      const newUser = await userService.findById(user._id)
+      const newUser = await userService.findById(ObjectId(user._id))
 
       const { accessToken, refreshToken } = await generateTokens(newUser._id)
 
@@ -169,7 +171,7 @@ class authController {
           role: 'creator',
         })
 
-        const newUser = await userService.findById(user._id)
+        const newUser = await userService.findById(ObjectId(user._id))
 
         const { accessToken, refreshToken } = await generateTokens(newUser._id)
 
@@ -236,7 +238,7 @@ class authController {
             role: 'creator',
           })
 
-          const newUser = await userService.findById(_newUser._id)
+          const newUser = await userService.findById(ObjectId(_newUser._id))
 
           const { accessToken, refreshToken } = await generateTokens(
             newUser._id,
@@ -351,7 +353,7 @@ class authController {
         )
       } else if (
         user.resetToken !== token ||
-        user.resetTokenExpires < Date.now()
+        +user.resetTokenExpires < +Date.now()
       ) {
         return next(
           new ErrorHandler(
@@ -550,7 +552,7 @@ class authController {
 
       if (!user) return res.send({ status: 'ok' })
 
-      await user.remove()
+      await user.deleteOne()
 
       res.send({ status: 'ok' })
     } catch (err) {

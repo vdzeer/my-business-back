@@ -28,6 +28,7 @@ class analyticsController {
       products.forEach(item => {
         const date = new Date(item.date).toISOString().slice(0, 10) // Extracting only the date part from the timestamp
         const selfPrice = item.products.reduce(
+          // @ts-ignore
           (total, item) => total + item.selfPrice,
           0,
         )

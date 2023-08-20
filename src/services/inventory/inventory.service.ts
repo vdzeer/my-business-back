@@ -24,7 +24,7 @@ class InventoryService {
   }
 
   deleteById(id: string) {
-    return InventoryModel.remove({ _id: id })
+    return InventoryModel.findOneAndDelete({ _id: id })
   }
 }
 

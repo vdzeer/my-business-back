@@ -38,7 +38,7 @@ class ProductService {
   }
 
   deleteById(id: string) {
-    return ProductModel.remove({ _id: id })
+    return ProductModel.findOneAndDelete({ _id: id })
   }
 }
 

@@ -4,6 +4,8 @@ import { ErrorHandler, errors } from '../errors'
 
 import { productService, userService } from '../services'
 
+const { ObjectId } = require('mongodb')
+
 class productController {
   async create(req, res, next) {
     try {
@@ -20,7 +22,7 @@ class productController {
         ...(req?.file ? { image: req.file.filename } : {}),
       })
 
-      const newProduct = await productService.findById(product._id)
+      const newProduct = await productService.findById(ObjectId(product._id))
 
       res.json({
         data: newProduct,

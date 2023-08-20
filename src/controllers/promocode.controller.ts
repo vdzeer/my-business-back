@@ -3,6 +3,8 @@ import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 import { promocodeService } from '../services'
 
+const { ObjectId } = require('mongodb')
+
 class promocodeController {
   async create(req, res, next) {
     try {
@@ -15,7 +17,9 @@ class promocodeController {
         salePercent,
       })
 
-      const newPromocode = await promocodeService.findById(createPromocode._id)
+      const newPromocode = await promocodeService.findById(
+        ObjectId(createPromocode._id),
+      )
 
       res.json({
         data: newPromocode,

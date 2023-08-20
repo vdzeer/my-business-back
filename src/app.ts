@@ -39,11 +39,7 @@ class App {
   }
 
   private setupDB(): void {
-    mongoose.connect(process.env.MONGODB_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: true,
-    })
+    mongoose.connect(process.env.MONGODB_URL)
 
     const db = mongoose.connection
     console.log('connected')

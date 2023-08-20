@@ -3,6 +3,8 @@ import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 import { supplierService } from '../services'
 
+const { ObjectId } = require('mongodb')
+
 class supplierController {
   async create(req, res, next) {
     try {
@@ -16,7 +18,7 @@ class supplierController {
         contact,
       })
 
-      const newSupplier = await supplierService.findById(supplier._id)
+      const newSupplier = await supplierService.findById(ObjectId(supplier._id))
 
       res.json({
         data: newSupplier,

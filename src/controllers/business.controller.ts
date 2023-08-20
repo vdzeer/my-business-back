@@ -34,7 +34,7 @@ class businessController {
         },
       )
 
-      const newBusiness = await businessService.findById(business._id)
+      const newBusiness = await businessService.findById(ObjectId(business._id))
 
       res.json({
         data: newBusiness,
@@ -113,7 +113,7 @@ class businessController {
         subscription: '64c38bc1939ea5354c0d8fde',
       })
 
-      const newUser = await userService.findById(user._id)
+      const newUser = await userService.findById(ObjectId(user._id))
 
       const business = await businessService.findOneByParams({
         _id: businessId,

@@ -72,7 +72,7 @@ class orderController {
         promocodeId,
       })
 
-      const newOrder = await orderService.findById(order._id)
+      const newOrder = await orderService.findById(ObjectId(order._id))
 
       res.json({
         data: newOrder,

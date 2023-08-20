@@ -28,7 +28,7 @@ class UserService {
   }
 
   deleteById(id: string) {
-    return UserModel.remove({ _id: id })
+    return UserModel.findOneAndDelete({ _id: id })
   }
 }
 

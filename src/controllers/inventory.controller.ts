@@ -3,6 +3,8 @@ import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 import { inventoryService, userService } from '../services'
 
+const { ObjectId } = require('mongodb')
+
 class inventoryController {
   async create(req, res, next) {
     try {
@@ -16,7 +18,9 @@ class inventoryController {
         ...(req?.file ? { image: req.file.filename } : {}),
       })
 
-      const newInventory = await inventoryService.findById(inventory._id)
+      const newInventory = await inventoryService.findById(
+        ObjectId(inventory._id),
+      )
 
       res.json({
         data: newInventory,

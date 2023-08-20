@@ -24,7 +24,7 @@ class SupplierService {
   }
 
   deleteById(id: string) {
-    return SupplierModel.remove({ _id: id })
+    return SupplierModel.findOneAndDelete({ _id: id })
   }
 }
 

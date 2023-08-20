@@ -1,6 +1,8 @@
 import { ErrorHandler } from '../errors'
 import { categoryService } from '../services'
 
+const { ObjectId } = require('mongodb')
+
 class categoryController {
   async create(req, res, next) {
     try {
@@ -12,7 +14,7 @@ class categoryController {
         ...(req?.file ? { image: req.file.filename } : {}),
       })
 
-      const newCategory = await categoryService.findById(category._id)
+      const newCategory = await categoryService.findById(ObjectId(category._id))
 
       res.json({
         data: newCategory,

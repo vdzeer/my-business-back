@@ -24,7 +24,7 @@ class PromocodeService {
   }
 
   deleteById(id: string) {
-    return PromocodeModel.remove({ _id: id })
+    return PromocodeModel.findOneAndDelete({ _id: id })
   }
 }
 

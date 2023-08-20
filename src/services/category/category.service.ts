@@ -24,7 +24,7 @@ class CategoryService {
   }
 
   deleteById(id: string) {
-    return CategoryModel.remove({ _id: id })
+    return CategoryModel.findOneAndDelete({ _id: id })
   }
 }
 
