@@ -14,16 +14,18 @@ jobs:
       uses: actions/checkout@v2
       
     - name: Create .env file
-      run: echo "PORT=3000" >> .env
-           echo "HOST=http://localhost" >> .env
-           echo "ALLOWED_ORIGIN=http://localhost:3000" >> .env
-           echo "ACCESS_TOKEN_PRIVATE_KEY=${{ secrets.ACCESS_TOKEN_PRIVATE_KEY }}" >> .env
-           echo "REFRESH_TOKEN_PRIVATE_KEY=${{ secrets.REFRESH_TOKEN_PRIVATE_KEY }}" >> .env
-           echo "MONGODB_URL=${{ secrets.MONGODB_URL }}" >> .env
-           echo "GOOGLE_KEY=${{ secrets.GOOGLE_KEY }}" >> .env
-           echo "GOOGLE_SECRET=${{ secrets.GOOGLE_SECRET }}" >> .env
-           echo "APPLE_PRIVATE_KEY=${{ secrets.APPLE_PRIVATE_KEY }}" >> .env
-           echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
+      uses: SpicyPizza/create-envfile@v2.0
+      with:
+        PORT: 3000
+        HOST: "http://localhost"
+        ALLOWED_ORIGIN: "http://localhost:3000"
+        ACCESS_TOKEN_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN_PRIVATE_KEY }}
+        REFRESH_TOKEN_PRIVATE_KEY: ${{ secrets.REFRESH_TOKEN_PRIVATE_KEY }}
+        MONGODB_URL: ${{ secrets.MONGODB_URL }}
+        GOOGLE_KEY: ${{ secrets.GOOGLE_KEY }}
+        GOOGLE_SECRET: ${{ secrets.GOOGLE_SECRET }}
+        APPLE_PRIVATE_KEY: ${{ secrets.APPLE_PRIVATE_KEY }}
+        CLIENT_ID: ${{ secrets.CLIENT_ID }}
 
     - name: Set up Node.js
       uses: actions/setup-node@v2
