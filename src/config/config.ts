@@ -12,8 +12,6 @@ export const config = {
     maxRequests: 1000,
   },
 
-  MONGODB_URL: process.env.MONGODB_URL || '',
-
   ROOT_EMAIL: process.env.ROOT_EMAIL || '',
   ROOT_EMAIL_PASSWORD: process.env.ROOT_EMAIL_PASSWORD || '',
   ROOT_EMAIL_SERVICE: process.env.ROOT_EMAIL_SERVICE || '',

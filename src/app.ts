@@ -33,17 +33,8 @@ class App {
     this.app.use(express.urlencoded({ extended: true }))
 
     this.mountRoutes()
-    this.setupDB()
 
     this.app.use(errorHandler)
-  }
-
-  private setupDB(): void {
-    mongoose.connect(process.env.MONGODB_URL)
-
-    const db = mongoose.connection
-    console.log('connected')
-    db.on('error', console.log.bind(console, 'MONGO ERRROR'))
   }
 
   private configureCors = (origin: any, callback: any) => {

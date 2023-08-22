@@ -1,34 +1,87 @@
-import { Types, UpdateWriteOpResult } from 'mongoose'
-import { UserModel } from '../../models'
+import { pgPool } from './../../config'
 
 class UserService {
-  createUser(user) {
-    const userToCreate = new UserModel(user)
-    return userToCreate.save()
+  async createUser(user) {
+    const query = `
+      INSERT INTO "user" (businesses, role, subscription, language, provider, email, password, name, image)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id;
+    `
+
+    const values = [
+      user.businesses,
+      user.role,
+      user.subscription,
+      user.language,
+      user.provider,
+      user.email,
+      user.password,
+      user.name,
+      user.image,
+    ]
+
+    const result = await pgPool.query(query, values)
+    return result.rows[0].id
   }
 
-  updateUserByParams(params, update): Promise<UpdateWriteOpResult> {
-    return UserModel.updateOne(params, update, { new: true }).exec()
+  async updateUserByParams(params, update) {
+    const conditionColumns = Object.keys(params)
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(' AND ')
+    const updateColumns = Object.keys(update)
+      .map(
+        (key, index) => `${key} = $${index + Object.keys(params).length + 1}`,
+      )
+      .join(', ')
+
+    const query = `
+      UPDATE "user"
+      SET ${updateColumns}
+      WHERE ${conditionColumns}
+      RETURNING *;
+    `
+
+    const values = [...Object.values(params), ...Object.values(update)]
+
+    const result = await pgPool.query(query, values)
+    return result.rows[0]
   }
 
-  findOneByParams(findObject) {
-    return UserModel.findOne(findObject)
-      .populate('businesses')
-      .populate('subscription')
-      .lean()
-      .exec()
+  async findOneByParams(findObject) {
+    const conditionColumns = Object.keys(findObject)
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(' AND ')
+
+    const query = `
+      SELECT * FROM "user"
+      WHERE ${conditionColumns};
+    `
+
+    const values = Object.values(findObject)
+
+    const result = await pgPool.query(query, values)
+    return result.rows[0]
   }
 
-  findById(id: string) {
-    return UserModel.findById(id)
-      .populate('businesses')
-      .populate('subscription')
-      .lean()
-      .exec()
+  async findById(id) {
+    const query = `
+      SELECT * FROM "user"
+      WHERE id = $1;
+    `
+
+    const result = await pgPool.query(query, [id])
+    return result.rows[0]
   }
 
-  deleteById(id: string) {
-    return UserModel.findOneAndDelete({ _id: id })
+  async deleteById(id) {
+    const query = `
+      DELETE FROM "user"
+      WHERE id = $1
+      RETURNING *;
+    `
+
+    const result = await pgPool.query(query, [id])
+    return result.rows[0]
   }
 }
 
