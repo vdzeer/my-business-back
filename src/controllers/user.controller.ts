@@ -321,7 +321,7 @@ class authController {
 
       await userService.updateUserByParams(
         { id: user.id },
-        { resetToken: token, resetTokenExpires: tokenExpires },
+        { reset_token: token, reset_token_expires: tokenExpires },
       )
 
       await nodemailerService(mailOptions)
@@ -402,8 +402,6 @@ class authController {
 
   async updateUserById(req, res, next) {
     try {
-      console.log(req.file)
-
       await userService.updateUserByParams(
         { id: req.userId },
         {
@@ -510,7 +508,7 @@ class authController {
     try {
       const { token } = req.body
 
-      const user = await UserTokenModel.findOne({ token })
+      const user = await userService.findTokenByToken(token)
 
       if (user) {
         const payload = { id: user.userId }
@@ -544,11 +542,11 @@ class authController {
     try {
       const { token } = req.body
 
-      const user = await UserTokenModel.findOne({ token })
+      const user = await userService.findTokenByToken(token)
 
       if (!user) return res.send({ status: 'ok' })
 
-      await user.deleteOne()
+      await userService.deleteTokenById(user.userId)
 
       res.send({ status: 'ok' })
     } catch (err) {

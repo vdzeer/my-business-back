@@ -94,6 +94,16 @@ class UserService {
     return result.rows[0]
   }
 
+  async findTokenByToken(token) {
+    const query = `
+      SELECT * FROM "user_token"
+      WHERE token = $1;
+    `
+
+    const result = await pgPool.query(query, [token])
+    return result.rows[0]
+  }
+
   async deleteTokenById(id) {
     const query = `
       DELETE FROM "user_token"
