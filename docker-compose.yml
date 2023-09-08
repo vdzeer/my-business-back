@@ -1,15 +1,5 @@
 version: '3.8'
 services:
-  api:
-    build: ./
-    container_name: api_backend
-    ports:
-      - '5000:5000'
-    environment:
-      - PORT=5000
-    volumes:
-      - ./my-business-back:/src
-
   db:
     container_name: postgres
     image: postgres
@@ -20,6 +10,18 @@ services:
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+
+  api:
+    build: ./
+    container_name: api_backend
+    ports:
+      - '5000:5000'
+    depends_on:
+      - db
+    environment:
+      - PORT=5000
+    volumes:
+      - ./my-business-back:/src
 
 volumes:
   data: {}
