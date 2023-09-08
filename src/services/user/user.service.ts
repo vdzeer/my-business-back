@@ -83,6 +83,40 @@ class UserService {
     const result = await pgPool.query(query, [id])
     return result.rows[0]
   }
+
+  async findTokenByUser(id) {
+    const query = `
+      SELECT * FROM "user_token"
+      WHERE user_id = $1;
+    `
+
+    const result = await pgPool.query(query, [id])
+    return result.rows[0]
+  }
+
+  async deleteTokenById(id) {
+    const query = `
+      DELETE FROM "user_token"
+      WHERE user_id = $1
+      RETURNING *;
+    `
+
+    const result = await pgPool.query(query, [id])
+    return result.rows[0]
+  }
+
+  async createUserToken(id, token) {
+    const query = `
+      INSERT INTO "user_token" (user_id, token, created_at)
+      VALUES ($1, $2, $3)
+      RETURNING id;
+    `
+
+    const values = [id, token, new Date()]
+
+    const result = await pgPool.query(query, values)
+    return result.rows[0].id
+  }
 }
 
 export const userService = new UserService()

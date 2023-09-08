@@ -4,8 +4,6 @@ import { ErrorHandler, errors } from '../errors'
 import { nodemailerService, userService } from '../services'
 import { UserTokenModel } from '../models'
 
-const { ObjectId } = require('mongodb')
-
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 const jwksClient = require('jwks-rsa')
@@ -53,10 +51,10 @@ const generateTokens = async id => {
       { expiresIn: '30d' },
     )
 
-    const userToken = await UserTokenModel.findOne({ userId: id })
-    if (userToken) await userToken.deleteOne()
+    const userToken = await userService.findTokenByUser(id)
+    if (userToken) await userService.deleteTokenById(id)
 
-    await new UserTokenModel({ userId: id, token: refreshToken }).save()
+    await userService.createUserToken(id, refreshToken)
     return Promise.resolve({ accessToken, refreshToken })
   } catch (err) {
     return Promise.reject(err)
@@ -88,12 +86,12 @@ class authController {
         name: '',
         image: '',
         businesses: [],
-        subscription: '64c38bc1939ea5354c0d8fde',
+        subscription: 1,
       })
 
-      const newUser = await userService.findById(ObjectId(user._id))
+      const newUser = await userService.findById(user)
 
-      const { accessToken, refreshToken } = await generateTokens(newUser._id)
+      const { accessToken, refreshToken } = await generateTokens(newUser.id)
 
       res.json({
         data: newUser,
@@ -131,7 +129,7 @@ class authController {
         )
       }
 
-      const { accessToken, refreshToken } = await generateTokens(candidate._id)
+      const { accessToken, refreshToken } = await generateTokens(candidate.id)
 
       res.json({
         data: candidate,
@@ -171,9 +169,9 @@ class authController {
           role: 'creator',
         })
 
-        const newUser = await userService.findById(ObjectId(user._id))
+        const newUser = await userService.findById(user)
 
-        const { accessToken, refreshToken } = await generateTokens(newUser._id)
+        const { accessToken, refreshToken } = await generateTokens(newUser.id)
 
         res.json({
           data: newUser,
@@ -181,9 +179,7 @@ class authController {
           refreshToken,
         })
       } else {
-        const { accessToken, refreshToken } = await generateTokens(
-          candidate._id,
-        )
+        const { accessToken, refreshToken } = await generateTokens(candidate.id)
 
         res.json({
           data: candidate,
@@ -238,11 +234,9 @@ class authController {
             role: 'creator',
           })
 
-          const newUser = await userService.findById(ObjectId(_newUser._id))
+          const newUser = await userService.findById(_newUser)
 
-          const { accessToken, refreshToken } = await generateTokens(
-            newUser._id,
-          )
+          const { accessToken, refreshToken } = await generateTokens(newUser.id)
 
           res.json({
             data: newUser,
@@ -251,7 +245,7 @@ class authController {
           })
         } else {
           const { accessToken, refreshToken } = await generateTokens(
-            candidate._id,
+            candidate.id,
           )
 
           res.json({
@@ -326,7 +320,7 @@ class authController {
       }
 
       await userService.updateUserByParams(
-        { _id: user._id },
+        { id: user.id },
         { resetToken: token, resetTokenExpires: tokenExpires },
       )
 
@@ -366,7 +360,7 @@ class authController {
         const hashPassword = await bcrypt.hash(newPassword, 12)
 
         await userService.updateUserByParams(
-          { _id: user._id },
+          { id: user.id },
           { resetToken: null, resetTokenExpires: null, password: hashPassword },
         )
       }
@@ -408,8 +402,10 @@ class authController {
 
   async updateUserById(req, res, next) {
     try {
+      console.log(req.file)
+
       await userService.updateUserByParams(
-        { _id: req.userId },
+        { id: req.userId },
         {
           ...req.body,
           ...(req?.file ? { image: req.file.filename } : {}),
@@ -417,7 +413,7 @@ class authController {
       )
 
       const updatedUser = await userService.findOneByParams({
-        _id: req.userId,
+        id: req.userId,
       })
 
       res.send({
@@ -434,14 +430,14 @@ class authController {
       const { subscriptionId } = req.body
 
       await userService.updateUserByParams(
-        { _id: req.userId },
+        { id: req.userId },
         {
           subscription: subscriptionId,
         },
       )
 
       const updatedUser = await userService.findOneByParams({
-        _id: req.userId,
+        id: req.userId,
       })
 
       res.send({
@@ -458,14 +454,14 @@ class authController {
       const { language } = req.body
 
       await userService.updateUserByParams(
-        { _id: req.userId },
+        { id: req.userId },
         {
           language,
         },
       )
 
       const updatedUser = await userService.findOneByParams({
-        _id: req.userId,
+        id: req.userId,
       })
 
       res.send({
@@ -481,7 +477,7 @@ class authController {
     try {
       const { oldPassword, password } = req.body
 
-      const user = await userService.findOneByParams({ _id: req.userId })
+      const user = await userService.findOneByParams({ id: req.userId })
 
       const isPasswordEquals = await bcrypt.compare(oldPassword, user.password)
 
@@ -498,7 +494,7 @@ class authController {
       const hashPassword = await bcrypt.hash(password, 7)
 
       await userService.updateUserByParams(
-        { _id: req.userId },
+        { id: req.userId },
         { password: hashPassword },
       )
 
