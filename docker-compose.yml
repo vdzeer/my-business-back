@@ -2,14 +2,16 @@ version: '3.8'
 services:
   db:
     container_name: postgres
+    restart: always
     image: postgres
     ports:
-      - '5433:${DB_PORT}'
-    volumes:
-      - data:/data/db
+      - '5555:5432'
     environment:
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PASSWORD=${pg_password}
+      - POSTGRES_DB=${pg_db}
+      - POSTGRES_USER=${pg_user}
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
 
   api:
     build: ./
@@ -22,6 +24,3 @@ services:
       - PORT=5000
     volumes:
       - ./my-business-back:/src
-
-volumes:
-  data: {}
