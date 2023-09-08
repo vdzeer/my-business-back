@@ -6,7 +6,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start-dev": "nodemon src/index.ts",
     "start": "node dist/index.js",
+    "dev": "nodemon -L src/index.js",
     "build": "rimraf dist && tsc",
+    "build-docker": "rimraf dist && tsc && node dist/index.js",
     "lint": "eslint --fix --ext .ts,.js src"
   },
   "repository": {
@@ -14,14 +16,14 @@
     "url": "git+https://github.com/vdzeer/my-business-back.git"
   },
   "author": "Vadim Dzerniuk",
-  "license": "ISC",
+  "license": "ISCs",
   "engines": {
     "node": "11.x",
     "yarn": "0.28.4"
   },
   "dependencies": {
     "axios": "^1.4.0",
-    "bcrypt": "^5.0.1",
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.17.1",
