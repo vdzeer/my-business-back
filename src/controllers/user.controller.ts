@@ -321,7 +321,7 @@ class authController {
 
       await userService.updateUserByParams(
         { id: user.id },
-        { reset_token: token, reset_token_expires: tokenExpires },
+        { reset_token: token, reset_token_expires: new Date(tokenExpires) },
       )
 
       await nodemailerService(mailOptions)
