@@ -284,7 +284,7 @@ class authController {
       }
 
       const token = generatePasswordToken()
-      const tokenExpires = Date.now() + 3600000
+      const tokenExpires = Date.now() + 24 * 60 * 60 * 1000
 
       const mailOptions = {
         from: 'myjob@gmail.com',
