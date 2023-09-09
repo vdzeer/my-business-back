@@ -305,7 +305,7 @@ class authController {
                   <table cellpadding="0" cellspacing="0" style="margin-top: 30px;">
                     <tr>
                       <td align="center" bgcolor="#ffffff" style="padding: 10px;">
-                        <a href="http://redirect-my-business-plus.s3-website.eu-central-1.amazonaws.com/?token=${token}&email=${email}" style="background-color: #3498db; color: #ffffff; display: inline-block; font-size: 16px; padding: 10px 20px; text-decoration: none;">Reset Password</a>
+                        <a href="https://my-business-react.vercel.app/?token=${token}&email=${email}" style="background-color: #3498db; color: #ffffff; display: inline-block; font-size: 16px; padding: 10px 20px; text-decoration: none;">Reset Password</a>
                       </td>
                     </tr>
                   </table>
