@@ -346,8 +346,8 @@ class authController {
           ),
         )
       } else if (
-        user.resetToken !== token ||
-        +user.resetTokenExpires < +Date.now()
+        user.reset_token !== token ||
+        +user.reset_token_expires < +Date.now()
       ) {
         return next(
           new ErrorHandler(
@@ -361,7 +361,11 @@ class authController {
 
         await userService.updateUserByParams(
           { id: user.id },
-          { resetToken: null, resetTokenExpires: null, password: hashPassword },
+          {
+            reset_token: null,
+            reset_token_expires: null,
+            password: hashPassword,
+          },
         )
       }
 
