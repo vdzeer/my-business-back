@@ -1,15 +1,33 @@
+# Setup and build the client
+
+FROM node:18 as client
+
+WORKDIR /usr/app/client/
+
+RUN npm install --legacy-peer-deps
+COPY client/package*.json ./
+COPY client/ ./
+RUN npm run build
+
+
+# Setup the server
+
 FROM node:18
 
 RUN npm install -g nodemon
 
-WORKDIR /app
+WORKDIR /usr/app/
+COPY --from=client /usr/app/client/dist/ ./client/dist/
 
-COPY ["package.json", "package-lock.json", "tsconfig.json", ".env", "./"]
+WORKDIR /usr/app/server/
+COPY server/package*.json ./
 
 RUN npm install --legacy-peer-deps
 
-COPY . .
+COPY server/ ./
 
-EXPOSE 4000
+ENV PORT 5000
+
+EXPOSE 5000
 
 CMD ["npm", "run", "dev"]

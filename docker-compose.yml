@@ -14,7 +14,11 @@ services:
       - ./pgdata:/var/lib/postgresql/data
 
   api:
-    build: ./
+    build:
+      context: ./server/
+    volumes:
+      - ./server/:/usr/app
+      - /usr/app/node_modules
     container_name: api_backend
     ports:
       - '5000:5000'
@@ -22,8 +26,6 @@ services:
       - db
     environment:
       - PORT=5000
-    volumes:
-      - ./my-business-back:/src
 
   pgadmin:
     container_name: pgadmin4_container
@@ -34,3 +36,15 @@ services:
       PGADMIN_DEFAULT_PASSWORD: root
     ports:
       - '5050:80'
+
+  front:
+    build:
+      context: ./client/
+    command: npm run dev
+    volumes:
+      - ./client/:/usr/app
+      - /usr/app/node_modules
+    depends_on:
+      - api
+    ports:
+      - '3000:3000'
