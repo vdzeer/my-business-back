@@ -1,9 +1,5 @@
-import { StatusCodes } from 'http-status-codes'
-import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 import { inventoryService, userService } from '../services'
-
-const { ObjectId } = require('mongodb')
 
 class inventoryController {
   async create(req, res, next) {
@@ -11,16 +7,14 @@ class inventoryController {
       const { name, businessId, amount, lowerRange } = req.body
 
       const inventory = await inventoryService.createInventory({
-        businessId,
+        business_id: businessId,
         name,
         amount,
         lowerRange,
         ...(req?.file ? { image: req.file.filename } : {}),
       })
 
-      const newInventory = await inventoryService.findById(
-        ObjectId(inventory._id),
-      )
+      const newInventory = await inventoryService.findById(inventory)
 
       res.json({
         data: newInventory,
@@ -33,7 +27,9 @@ class inventoryController {
   async getAll(req, res, next) {
     try {
       const { businessId } = req.params
-      const inventories = await inventoryService.findAllByParams({ businessId })
+      const inventories = await inventoryService.findAllByParams({
+        business_id: businessId,
+      })
 
       res.json({
         data: inventories,
@@ -48,17 +44,17 @@ class inventoryController {
       const { inventoryId, name, amount, lowerRange } = req.body
 
       await inventoryService.updateByParams(
-        { _id: inventoryId },
+        { id: inventoryId },
         {
           name,
           amount,
-          lowerRange,
+          ...(lowerRange ? { lower_range: lowerRange } : {}),
           ...(req?.file ? { image: req.file.filename } : {}),
         },
       )
 
       const updatedInventory = await inventoryService.findOneByParams({
-        _id: inventoryId,
+        id: inventoryId,
       })
 
       res.send({

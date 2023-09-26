@@ -2,8 +2,6 @@ import { StatusCodes } from 'http-status-codes'
 import { businessService } from '../../services'
 import { ErrorHandler, errors } from '../../errors'
 
-const { ObjectId } = require('mongodb')
-
 export const checkOwnershipMiddleware = async (req, res, next) => {
   const businessId =
     req.params.businessId || req.body.businessId || req.query.businessId
@@ -11,8 +9,6 @@ export const checkOwnershipMiddleware = async (req, res, next) => {
 
   try {
     const business = await businessService.findById(businessId)
-
-    console.log(business, userId)
 
     if (!business) {
       return next(
@@ -25,12 +21,10 @@ export const checkOwnershipMiddleware = async (req, res, next) => {
     }
 
     if (
-      !business.userId ||
+      !business.user_id ||
       !(
-        ObjectId(business.userId).equals(ObjectId(userId)) ||
-        business.workers.findIndex(el =>
-          ObjectId(el._id).equals(ObjectId(userId)),
-        ) !== -1
+        +business.user_id === +userId ||
+        business.workers.findIndex(el => +el.id === +userId) !== -1
       )
     ) {
       return next(

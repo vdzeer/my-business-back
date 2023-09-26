@@ -1,24 +1,18 @@
-import { StatusCodes } from 'http-status-codes'
-import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 import { supplierService } from '../services'
-
-const { ObjectId } = require('mongodb')
 
 class supplierController {
   async create(req, res, next) {
     try {
       const { name, businessId, contact } = req.body
 
-      console.log(req.body)
-
       const supplier = await supplierService.createSupplier({
-        businessId,
+        business_id: businessId,
         name,
         contact,
       })
 
-      const newSupplier = await supplierService.findById(ObjectId(supplier._id))
+      const newSupplier = await supplierService.findById(supplier)
 
       res.json({
         data: newSupplier,
@@ -31,7 +25,9 @@ class supplierController {
   async getAll(req, res, next) {
     try {
       const { businessId } = req.params
-      const suppliers = await supplierService.findAllByParams({ businessId })
+      const suppliers = await supplierService.findAllByParams({
+        business_id: businessId,
+      })
 
       res.json({
         data: suppliers,
@@ -46,7 +42,7 @@ class supplierController {
       const { supplierId, name, contact } = req.body
 
       await supplierService.updateByParams(
-        { _id: supplierId },
+        { id: supplierId },
         {
           name,
           contact,
@@ -54,7 +50,7 @@ class supplierController {
       )
 
       const updatedSupplier = await supplierService.findOneByParams({
-        _id: supplierId,
+        id: supplierId,
       })
 
       res.send({

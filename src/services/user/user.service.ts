@@ -60,7 +60,18 @@ class UserService {
     const values = Object.values(findObject)
 
     const result = await pgPool.query(query, values)
-    return result.rows[0]
+    const user = result.rows[0]
+
+    const subscription = user?.subscription
+      ? await pgPool.query(
+          `
+            SELECT * FROM "subscription"
+            WHERE id = $1;`,
+          [user.subscription],
+        )
+      : null
+
+    return { ...user, subscription: subscription?.rows?.[0] ?? null }
   }
 
   async findById(id) {

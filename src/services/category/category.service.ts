@@ -1,30 +1,93 @@
-import { Types, UpdateWriteOpResult } from 'mongoose'
-import { CategoryModel } from '../../models'
+import { pgPool } from './../../config'
 
 class CategoryService {
-  createCategory(category) {
-    const categoryToCreate = new CategoryModel(category)
-    return categoryToCreate.save()
+  async createCategory(category) {
+    const query = `
+      INSERT INTO category (business_id, name, image)
+      VALUES ($1, $2, $3)
+      RETURNING id;
+    `
+
+    const values = [category.business_id, category.name, category.image]
+
+    const result = await pgPool.query(query, values)
+    return result.rows[0].id
   }
 
-  updateByParams(params, update): Promise<UpdateWriteOpResult> {
-    return CategoryModel.updateOne(params, update, { new: true }).exec()
+  async updateByParams(params, update) {
+    const conditionColumns = Object.keys(params)
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(' AND ')
+    const updateColumns = Object.keys(update)
+      .map(
+        (key, index) => `${key} = $${index + Object.keys(params).length + 1}`,
+      )
+      .join(', ')
+
+    const query = `
+      UPDATE category
+      SET ${updateColumns}
+      WHERE ${conditionColumns}
+      RETURNING *;
+    `
+
+    const values = [...Object.values(params), ...Object.values(update)]
+
+    const result = await pgPool.query(query, values)
+    return result.rows[0]
   }
 
-  findOneByParams(findObject) {
-    return CategoryModel.findOne(findObject).lean().exec()
+  async findOneByParams(findObject) {
+    const conditionColumns = Object.keys(findObject)
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(' AND ')
+
+    const query = `
+      SELECT * FROM category
+      WHERE ${conditionColumns};
+    `
+
+    const values = Object.values(findObject)
+
+    const result = await pgPool.query(query, values)
+    return result.rows[0]
   }
 
-  findAllByParams(findObject) {
-    return CategoryModel.find(findObject).lean().exec()
+  async findAllByParams(findObject) {
+    const conditionColumns = Object.keys(findObject)
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(' AND ')
+
+    const query = `
+      SELECT * FROM category
+      WHERE ${conditionColumns};
+    `
+
+    const values = Object.values(findObject)
+
+    const result = await pgPool.query(query, values)
+    return result.rows
   }
 
-  findById(id: string) {
-    return CategoryModel.findById(id).lean().exec()
+  async findById(id: string) {
+    const query = `
+      SELECT * FROM category
+      WHERE id = $1;
+    `
+
+    const result = await pgPool.query(query, [id])
+    return result.rows[0]
   }
 
-  deleteById(id: string) {
-    return CategoryModel.findOneAndDelete({ _id: id })
+  async deleteById(id: string) {
+    const query = `
+      DELETE FROM category
+      WHERE id = $1
+      RETURNING *;
+    `
+
+    const result = await pgPool.query(query, [id])
+    return result.rows[0]
   }
 }
 

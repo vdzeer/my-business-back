@@ -4,9 +4,33 @@ import { ErrorHandler, errors } from '../errors'
 import { businessService, nodemailerService, userService } from '../services'
 
 const crypto = require('crypto')
-const { ObjectId } = require('mongodb')
 
 class businessController {
+  async getBusinesses(businesses) {
+    try {
+      const fizInfos = await Promise.all(
+        businesses.map(async item => {
+          const biz = await businessService.findById(item)
+
+          const workers = biz?.workers?.length
+            ? await Promise.all(
+                biz?.workers.map(async item => {
+                  const user = await userService.findById(item)
+                  return user
+                }),
+              )
+            : []
+
+          return { ...biz, workers }
+        }),
+      )
+
+      return fizInfos
+    } catch (err) {
+      return []
+    }
+  }
+
   async create(req, res, next) {
     try {
       const { userId } = req
@@ -14,7 +38,7 @@ class businessController {
 
       const hashPassword = await bcrypt.hash(password, 12)
 
-      const business = await businessService.createBusiness({
+      const businessId = await businessService.createBusiness({
         userId,
         name,
         password: hashPassword,
@@ -24,17 +48,17 @@ class businessController {
       })
 
       const user = await userService.findOneByParams({
-        _id: req.userId,
+        id: req.userId,
       })
 
       await userService.updateUserByParams(
-        { _id: req.userId },
+        { id: req.userId },
         {
-          businesses: [business._id, ...user.businesses],
+          businesses: [businessId, ...(user?.businesses ?? [])],
         },
       )
 
-      const newBusiness = await businessService.findById(ObjectId(business._id))
+      const newBusiness = await businessService.findById(businessId)
 
       res.json({
         data: newBusiness,
@@ -74,8 +98,17 @@ class businessController {
         )
       }
 
+      const workers = currentBusiness?.workers?.length
+        ? await Promise.all(
+            currentBusiness?.workers.map(async item => {
+              const user = await userService.findById(item)
+              return user
+            }),
+          )
+        : []
+
       res.json({
-        data: currentBusiness,
+        data: { ...currentBusiness, workers },
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -102,7 +135,7 @@ class businessController {
 
       const hashPassword = await bcrypt.hash(newPassword, 12)
 
-      const user = await userService.createUser({
+      const userId = await userService.createUser({
         provider: 'email',
         password: hashPassword,
         role: 'worker',
@@ -110,21 +143,21 @@ class businessController {
         email,
         image: '',
         businesses: [businessId],
-        subscription: '64c38bc1939ea5354c0d8fde',
+        subscription: 1,
       })
 
-      const newUser = await userService.findById(ObjectId(user._id))
+      const newUser = await userService.findById(userId)
 
       const business = await businessService.findOneByParams({
-        _id: businessId,
+        id: businessId,
       })
 
       await businessService.updateByParams(
-        { _id: businessId },
+        { id: businessId },
         {
           workers: [
             ...(business?.workers ? business?.workers : []),
-            newUser._id,
+            newUser.id,
           ],
         },
       )
@@ -190,11 +223,7 @@ class businessController {
         )
       }
 
-      if (
-        candidate.businesses.findIndex(el =>
-          ObjectId(el._id).equals(ObjectId(businessId)),
-        ) !== -1
-      ) {
+      if (candidate.businesses.findIndex(el => el.id === businessId) !== -1) {
         return next(
           new ErrorHandler(
             StatusCodes.BAD_REQUEST,
@@ -205,24 +234,24 @@ class businessController {
       }
 
       await userService.updateUserByParams(
-        { _id: candidate._id },
+        { id: candidate.id },
         {
           businesses: candidate?.businesses
-            ? [...candidate.businesses.map(el => el._id), businessId]
+            ? [...candidate.businesses.map(el => el.id), businessId]
             : [businessId],
         },
       )
 
       const business = await businessService.findOneByParams({
-        _id: businessId,
+        id: businessId,
       })
 
       await businessService.updateByParams(
-        { _id: businessId },
+        { id: businessId },
         {
           workers: [
             ...(business?.workers ? business?.workers : []),
-            candidate._id,
+            candidate.id,
           ],
         },
       )
@@ -287,11 +316,7 @@ class businessController {
         )
       }
 
-      if (
-        candidate.businesses.findIndex(el =>
-          ObjectId(el._id).equals(ObjectId(businessId)),
-        ) === -1
-      ) {
+      if (candidate.businesses.findIndex(el => +el === +businessId) === -1) {
         return next(
           new ErrorHandler(
             StatusCodes.BAD_REQUEST,
@@ -302,24 +327,22 @@ class businessController {
       }
 
       await userService.updateUserByParams(
-        { _id: candidate._id },
+        { id: candidate.id },
         {
           businesses: candidate?.businesses.filter(
-            el => !ObjectId(el._id).equals(ObjectId(businessId)),
+            el => !(+el === +businessId),
           ),
         },
       )
 
       const business = await businessService.findOneByParams({
-        _id: businessId,
+        id: businessId,
       })
 
       await businessService.updateByParams(
-        { _id: businessId },
+        { id: businessId },
         {
-          workers: business.workers.filter(
-            el => !ObjectId(el._id).equals(ObjectId(candidate._id)),
-          ),
+          workers: business.workers.filter(el => !(+el === +candidate.id)),
         },
       )
 
@@ -336,7 +359,7 @@ class businessController {
       const { businessId, name, currency } = req.body
 
       await businessService.updateByParams(
-        { _id: businessId },
+        { id: businessId },
         {
           name,
           currency,
@@ -345,12 +368,21 @@ class businessController {
       )
 
       const updatedBusiness = await businessService.findOneByParams({
-        _id: businessId,
+        id: businessId,
       })
+
+      const workers = updatedBusiness?.workers?.length
+        ? await Promise.all(
+            updatedBusiness?.workers.map(async item => {
+              const user = await userService.findById(item)
+              return user
+            }),
+          )
+        : []
 
       res.send({
         status: 'ok',
-        data: updatedBusiness,
+        data: { ...updatedBusiness, workers },
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -364,13 +396,13 @@ class businessController {
       await businessService.deleteById(businessId)
 
       const user = await userService.findOneByParams({
-        _id: req.userId,
+        id: req.userId,
       })
 
       await userService.updateUserByParams(
-        { _id: req.userId },
+        { id: req.userId },
         {
-          businesses: user.businesses.filter(el => el !== businessId),
+          businesses: user.businesses.filter(el => +el !== +businessId),
         },
       )
 

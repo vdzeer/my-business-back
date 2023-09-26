@@ -1,20 +1,18 @@
 import { ErrorHandler } from '../errors'
 import { categoryService } from '../services'
 
-const { ObjectId } = require('mongodb')
-
 class categoryController {
   async create(req, res, next) {
     try {
       const { name, businessId } = req.body
 
       const category = await categoryService.createCategory({
-        businessId,
+        business_id: businessId,
         name,
         ...(req?.file ? { image: req.file.filename } : {}),
       })
 
-      const newCategory = await categoryService.findById(ObjectId(category._id))
+      const newCategory = await categoryService.findById(category)
 
       res.json({
         data: newCategory,
@@ -27,7 +25,9 @@ class categoryController {
   async getAll(req, res, next) {
     try {
       const { businessId } = req.params
-      const inventories = await categoryService.findAllByParams({ businessId })
+      const inventories = await categoryService.findAllByParams({
+        business_id: businessId,
+      })
 
       res.json({
         data: inventories,
@@ -42,7 +42,7 @@ class categoryController {
       const { categoryId, name } = req.body
 
       await categoryService.updateByParams(
-        { _id: categoryId },
+        { id: categoryId },
         {
           name,
           ...(req?.file ? { image: req.file.filename } : {}),
@@ -50,7 +50,7 @@ class categoryController {
       )
 
       const updatedCategory = await categoryService.findOneByParams({
-        _id: categoryId,
+        id: categoryId,
       })
 
       res.send({

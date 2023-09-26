@@ -1,9 +1,5 @@
-import { StatusCodes } from 'http-status-codes'
-import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 import { promocodeService } from '../services'
-
-const { ObjectId } = require('mongodb')
 
 class promocodeController {
   async create(req, res, next) {
@@ -12,14 +8,12 @@ class promocodeController {
 
       const createPromocode = await promocodeService.createPromocode({
         promocode,
-        businessId,
-        useAmount,
-        salePercent,
+        business_id: businessId,
+        use_amount: useAmount,
+        sale_percent: salePercent,
       })
 
-      const newPromocode = await promocodeService.findById(
-        ObjectId(createPromocode._id),
-      )
+      const newPromocode = await promocodeService.findById(createPromocode)
 
       res.json({
         data: newPromocode,
@@ -32,7 +26,9 @@ class promocodeController {
   async getAll(req, res, next) {
     try {
       const { businessId } = req.params
-      const promocodes = await promocodeService.findAllByParams({ businessId })
+      const promocodes = await promocodeService.findAllByParams({
+        business_id: businessId,
+      })
 
       res.json({
         data: promocodes,
@@ -46,7 +42,7 @@ class promocodeController {
     try {
       const { businessId, promocodeName } = req.body
       const promocode = await promocodeService.findOneByParams({
-        businessId,
+        business_id: businessId,
         promocode: promocodeName,
       })
 
@@ -63,16 +59,16 @@ class promocodeController {
       const { promocodeId, promocode, useAmount, salePercent } = req.body
 
       await promocodeService.updateByParams(
-        { _id: promocodeId },
+        { id: promocodeId },
         {
           promocode,
-          useAmount,
-          salePercent,
+          use_amount: useAmount,
+          sale_percent: salePercent,
         },
       )
 
       const updatedPromocode = await promocodeService.findOneByParams({
-        _id: promocodeId,
+        id: promocodeId,
       })
 
       res.send({

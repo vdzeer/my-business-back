@@ -1,8 +1,11 @@
-import { StatusCodes } from 'http-status-codes'
-import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 
-import { orderService, productService, userService } from '../services'
+import {
+  inventoryService,
+  orderService,
+  productService,
+  userService,
+} from '../services'
 
 class analyticsController {
   async getAll(req, res, next) {
@@ -15,32 +18,51 @@ class analyticsController {
       const startDate = new Date(curr.setDate(first))
       const endDate = new Date(curr.setDate(first + 6))
 
-      const products = await orderService.findAllByParams({
-        businessId,
-        date: {
-          $gte: startDate.toISOString(),
-          $lt: endDate.toISOString(),
-        },
+      const orders = await orderService.findAllByDate({
+        business_id: businessId,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
       })
+
+      const newOrders = await Promise.all(
+        orders.map(async order => {
+          const products = await Promise.all(
+            order.products.map(async el => {
+              const product = await productService.findById(el)
+
+              const inventories = await Promise.all(
+                product.inventories.map(async item => {
+                  const inv = await inventoryService.findById(item)
+                  return inv
+                }),
+              )
+
+              return { ...product, inventories }
+            }),
+          )
+
+          return { ...order, products }
+        }),
+      )
 
       const parsedData = {}
 
-      products.forEach(item => {
-        const date = new Date(item.date).toISOString().slice(0, 10) // Extracting only the date part from the timestamp
+      newOrders.forEach(item => {
+        const date = new Date(item.date).toISOString().slice(0, 10)
         const selfPrice = item.products.reduce(
           // @ts-ignore
-          (total, item) => total + item.selfPrice,
+          (total, item) => +total + +item.self_price,
           0,
         )
 
         if (parsedData[date]) {
           parsedData[date] = {
-            total: parsedData[date].total + item.totalPrice,
-            self: parsedData[date].self + selfPrice,
+            total: +parsedData[date].total + +item.total_price,
+            self: +parsedData[date].self + +selfPrice,
           }
         } else {
           parsedData[date] = {
-            total: +item.totalPrice,
+            total: +item.total_price,
             self: +selfPrice,
           }
         }

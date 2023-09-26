@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 import { nodemailerService, userService } from '../services'
 import { UserTokenModel } from '../models'
+import { BusinessController } from './business.controller'
 
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
@@ -93,8 +94,12 @@ class authController {
 
       const { accessToken, refreshToken } = await generateTokens(newUser.id)
 
+      const businesses = await BusinessController.getBusinesses(
+        newUser.businesses,
+      )
+
       res.json({
-        data: newUser,
+        data: { ...newUser, businesses },
         accessToken,
         refreshToken,
       })
@@ -131,8 +136,12 @@ class authController {
 
       const { accessToken, refreshToken } = await generateTokens(candidate.id)
 
+      const businesses = await BusinessController.getBusinesses(
+        candidate.businesses,
+      )
+
       res.json({
-        data: candidate,
+        data: { ...candidate, businesses },
         accessToken,
         refreshToken,
       })
@@ -173,16 +182,24 @@ class authController {
 
         const { accessToken, refreshToken } = await generateTokens(newUser.id)
 
+        const businesses = await BusinessController.getBusinesses(
+          newUser.businesses,
+        )
+
         res.json({
-          data: newUser,
+          data: { ...newUser, businesses },
           accessToken,
           refreshToken,
         })
       } else {
         const { accessToken, refreshToken } = await generateTokens(candidate.id)
 
+        const businesses = await BusinessController.getBusinesses(
+          candidate.businesses,
+        )
+
         res.json({
-          data: candidate,
+          data: { ...candidate, businesses },
           accessToken,
           refreshToken,
         })
@@ -238,8 +255,12 @@ class authController {
 
           const { accessToken, refreshToken } = await generateTokens(newUser.id)
 
+          const businesses = await BusinessController.getBusinesses(
+            newUser.businesses,
+          )
+
           res.json({
-            data: newUser,
+            data: { ...newUser, businesses },
             accessToken,
             refreshToken,
           })
@@ -248,8 +269,12 @@ class authController {
             candidate.id,
           )
 
+          const businesses = await BusinessController.getBusinesses(
+            candidate.businesses,
+          )
+
           res.json({
-            data: candidate,
+            data: { ...candidate, businesses },
             accessToken,
             refreshToken,
           })
@@ -380,9 +405,11 @@ class authController {
       const { id } = req.params
       const user = await userService.findById(id)
 
+      const businesses = await BusinessController.getBusinesses(user.businesses)
+
       res.send({
         status: 'ok',
-        data: user,
+        data: { ...user, businesses },
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -395,9 +422,11 @@ class authController {
 
       const user = await userService.findById(userId)
 
+      const businesses = await BusinessController.getBusinesses(user.businesses)
+
       res.send({
         status: 'ok',
-        data: user,
+        data: { ...user, businesses },
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -418,9 +447,13 @@ class authController {
         id: req.userId,
       })
 
+      const businesses = await BusinessController.getBusinesses(
+        updatedUser.businesses,
+      )
+
       res.send({
         status: 'ok',
-        data: updatedUser,
+        data: { ...updatedUser, businesses },
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -442,9 +475,13 @@ class authController {
         id: req.userId,
       })
 
+      const businesses = await BusinessController.getBusinesses(
+        updatedUser.businesses,
+      )
+
       res.send({
         status: 'ok',
-        data: updatedUser,
+        data: { ...updatedUser, businesses },
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -466,9 +503,13 @@ class authController {
         id: req.userId,
       })
 
+      const businesses = await BusinessController.getBusinesses(
+        updatedUser.businesses,
+      )
+
       res.send({
         status: 'ok',
-        data: updatedUser,
+        data: { ...updatedUser, businesses },
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))

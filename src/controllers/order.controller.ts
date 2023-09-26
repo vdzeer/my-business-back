@@ -1,5 +1,3 @@
-import { StatusCodes } from 'http-status-codes'
-import * as bcrypt from 'bcrypt'
 import { ErrorHandler, errors } from '../errors'
 
 import {
@@ -9,8 +7,6 @@ import {
   inventoryService,
 } from '../services'
 
-const { ObjectId } = require('mongodb')
-
 class orderController {
   async create(req, res, next) {
     try {
@@ -18,42 +14,50 @@ class orderController {
 
       const { businessId, payType, products, promocodeId } = req.body
 
-      const parsedProducts = await productService.findMore(products)
+      const parsedProducts = await Promise.all(
+        products.map(async el => {
+          const product = await productService.findById(el)
 
-      const _products = products
-        .map(el =>
-          parsedProducts.find(parsed =>
-            ObjectId(parsed._id).equals(ObjectId(el)),
-          ),
-        )
-        .filter(el => !!el)
+          const inventories = await Promise.all(
+            product.inventories.map(async item => {
+              const inv = await inventoryService.findById(item)
+              return inv
+            }),
+          )
 
-      let totalPrice = _products.reduce((total, item) => total + item.price, 0)
+          return { ...product, inventories }
+        }),
+      )
+
+      let totalPrice = parsedProducts.reduce(
+        (total, item) => total + item.price,
+        0,
+      )
 
       if (promocodeId) {
         const promocode = await promocodeService.findById(promocodeId)
 
-        if (promocode && promocode.useAmount > 0) {
-          const { salePercent } = promocode
-          totalPrice = totalPrice - (totalPrice * salePercent) / 100
+        if (promocode && promocode.use_amount > 0) {
+          const { sale_percent } = promocode
+          totalPrice = totalPrice - (totalPrice * sale_percent) / 100
 
           await promocodeService.updateByParams(
-            { _id: promocodeId },
+            { id: promocodeId },
             {
-              useAmount: promocode.useAmount - 1,
+              use_amount: promocode.use_amount - 1,
             },
           )
         }
       }
 
-      for (let index = 0; index < _products.length; index++) {
-        const product = _products[index]
+      for (let index = 0; index < parsedProducts.length; index++) {
+        const product = parsedProducts[index]
 
         if (product.inventories?.length) {
           for (let y = 0; y < product.inventories?.length; y++) {
             const inventory = product.inventories[y]
             await inventoryService.updateByParams(
-              { _id: inventory._id },
+              { id: inventory.id },
               {
                 amount: inventory.amount - 1,
               },
@@ -63,19 +67,34 @@ class orderController {
       }
 
       const order = await orderService.createOrder({
-        businessId,
-        payType,
-        user: userId,
-        products: _products.map(el => el._id),
+        business_id: businessId,
+        pay_type: payType,
+        user_id: userId,
+        products: parsedProducts.map(el => el.id),
         date: new Date(),
-        totalPrice,
-        promocodeId,
+        total_price: totalPrice,
+        promocode_id: promocodeId,
       })
 
-      const newOrder = await orderService.findById(ObjectId(order._id))
+      const newOrder = await orderService.findById(order)
+
+      const newOrder_ParsedProducts = await Promise.all(
+        newOrder.products.map(async el => {
+          const product = await productService.findById(el)
+
+          const inventories = await Promise.all(
+            product.inventories.map(async item => {
+              const inv = await inventoryService.findById(item)
+              return inv
+            }),
+          )
+
+          return { ...product, inventories }
+        }),
+      )
 
       res.json({
-        data: newOrder,
+        data: { ...newOrder, products: newOrder_ParsedProducts },
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
@@ -90,16 +109,35 @@ class orderController {
       const startDate = new Date(date)
       const endDate = new Date(new Date().setDate(startDate.getDate() + 1))
 
-      const orders = await orderService.findAllByParams({
-        businessId,
-        date: {
-          $gte: startDate.toISOString(),
-          $lt: endDate.toISOString(),
-        },
+      const orders = await orderService.findAllByDate({
+        business_id: businessId,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
       })
 
+      const newOrders = await Promise.all(
+        orders.map(async order => {
+          const products = await Promise.all(
+            order.products.map(async el => {
+              const product = await productService.findById(el)
+
+              const inventories = await Promise.all(
+                product.inventories.map(async item => {
+                  const inv = await inventoryService.findById(item)
+                  return inv
+                }),
+              )
+
+              return { ...product, inventories }
+            }),
+          )
+
+          return { ...order, products }
+        }),
+      )
+
       res.json({
-        data: orders,
+        data: newOrders,
       })
     } catch (err) {
       return next(new ErrorHandler(err?.status, err?.code, err?.message))
