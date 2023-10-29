@@ -173,7 +173,7 @@ class authController {
           name,
           image: '',
           businesses: [],
-          subscription: '64c38bc1939ea5354c0d8fde',
+          subscription: '1',
           email,
           role: 'creator',
         })
@@ -246,7 +246,7 @@ class authController {
             name: '',
             image: '',
             businesses: [],
-            subscription: '64c38bc1939ea5354c0d8fde',
+            subscription: '1',
             email,
             role: 'creator',
           })
