@@ -240,7 +240,7 @@ class authController {
           email,
         })
 
-        if (!candidate) {
+        if (!candidate?.id) {
           const _newUser = await userService.createUser({
             provider: 'apple',
             name: '',

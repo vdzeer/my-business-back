@@ -71,7 +71,9 @@ class UserService {
         )
       : null
 
-    return { ...user, subscription: subscription?.rows?.[0] ?? null }
+    return user
+      ? { ...user, subscription: subscription?.rows?.[0] ?? null }
+      : user
   }
 
   async findById(id) {
